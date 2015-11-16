@@ -36,7 +36,7 @@ app.post('/api/customers', validate(validation.customer), function (req, res) {
                 var ext = matches[1];
                 var data = matches[2];
                 var buffer = new Buffer(data, 'base64');
-
+k
                 fs.writeFile("file.pdf", buffer, function(err) {
                     console.log(err);
                 });
