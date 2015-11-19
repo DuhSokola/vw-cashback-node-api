@@ -1,0 +1,68 @@
+<img src="cid:unique@cashback.pic">
+<br>
+<br>
+<br>
+Sehr geehrte<%= (customerData.salutation == 'mr') ? 'r' : '' %> <%= (customerData.salutation == 'mr') ? 'Herr' : 'Frau' %> <%= customerData.surname %>
+<br>
+<br>
+Besten Dank für Ihren Cashback-Antrag
+<br>
+<br>
+Ihre Angaben werden von unserer Fachabteilung geprüft.
+Bei Übereinstimmung Ihrer Daten werden wir den Cashback-Betrag von CHF 300.--
+innert 14 Tage nach Erhalt dieses Schreiben überweisen.
+<br>
+<br>
+Ihr Antrag wurde wie folgt von uns empfangen:
+<h2>Adressdaten:</h2>
+<b>Anrede: </b>  <%= (customerData.salutation == 'mr') ? 'Herr' : 'Frau' %>
+<br>
+<b>Vorname:</b> <%= customerData.forename %>
+<br>
+<b>Name:</b> <%= customerData.surname %>
+<br>
+<b>Strasse, Nr:</b> <%= customerData.street %>, <%= customerData.street_nr %>
+<br>
+<b>Postfach:</b> <%= customerData.po_box %>
+<br>
+<b>PLZ:</b> <%= customerData.zip %>
+<br>
+<b>Ort:</b> <%= customerData.city %>
+<br>
+<b>E-Mail:</b>   <%= customerData.email %>
+<br>
+<b>Telefon:</b>   <%= customerData.telephone %>
+<h2>Daten für Auszahlung:</h2>
+<b><i>Bankverbindung</i></b>
+<br>
+<b>Bankname:</b> <%= customerData.bank_name %>
+<br>
+<b>Ort:</b> <%= customerData.bank_city %>
+<br>
+<b>IBAN:</b> <%= customerData.bank_iban %>
+<br>
+<br>
+<i><b>Postverbindung</b></i>
+<br>
+<b>Konto-Nummer:</b> <%= customerData.bank_account %>
+<br>
+<br>
+<br>
+Für Fragen wenden Sie sich bitte an unseren Support 044 846 15 16 oder
+support.pcc@amag.ch
+<br>
+<br>
+<br>
+<h3>Rechtlicher Hinweis:</h3>
+Der Anspruch der Rückvergütung muss vom Endkunden mit dem durch die AMAG Group Aftersales in Buchs<br>
+auf die www.volkswagen.ch bereitgestellten Cash-Back-Formular und mit dem Nachweis in Form einer Kopie <br>
+der Originalrechnung des offiziellen Volkswagen Partners, bis spätestens 31. Mai 2016,an AMAG Teile<br>
+und Logistik Zenter in Buchs ZH geltend gemacht werden. Anträge per Fax oder Telefon werden nicht entgegengenommen.<br>
+Einsende- und Antragsschluss ist der 31. Mai 2016, für Anträge per Post gilt das Datum des Poststempels.<br>
+Später eingegangene Anträge können leider nicht berücksichtigtwerden. Der Anspruch der Rückvergütung ist<br>
+auf einen Antrag pro in der Schweiz immatrikuliertes Fahrzeug der Marke Volkswagen begrenzt. Die Zahlung an den<br>
+Endkunden erfolgt durch AMAG Automobil-und Motoren AG. Die Auszahlungsadresse muss mit der Kundenadresse auf<br>
+der Rechnung übereinstimmen. Der Promotionsanspruch kann nicht mit weiteren von AMAG Automobil-und Motoren AG<br>
+bereits gewährten Rabatten, Vergünstigungen, speziellen Vereinbarungen oder als Anzahlung für eine<br>
+folgende Dienstleistung, etc. kumuliert werden. Alle aufgeführten Preise sind empfohlene Verkaufspreise<br>
+und verstehen sich inkl. 8% MwSt. Änderungen sind vorbehalten. Alle Angaben ohne Gewähr.

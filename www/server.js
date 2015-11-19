@@ -11,9 +11,19 @@ var bodyParser = require('body-parser');
 var validate = require('express-validation');
 var validation = require('./validation');
 var fs = require('fs');
+var nodemailer = require('nodemailer');
+var path = require('path');
+var templatesDir = path.resolve(__dirname, 'templates');
+var emailTemplates = require('email-templates');
+var randomstring = require("randomstring");
 
 
 var app = express();
+
+app.use(express.static('image'));
+app.use(bodyParser.json({limit: '10mb'}));
+app.use(validate(validation));
+
 
 var connection = mysql.createConnection({
     host: 'localhost',
@@ -22,26 +32,56 @@ var connection = mysql.createConnection({
     database: 'vw_autofruehling'
 });
 
-app.use(bodyParser.json({limit: '10mb'}));
-app.use(validate(validation));
+var transport = nodemailer.createTransport({
+    service: 'hotmail',
+    auth: {
+        user: 'dmitry.prudnikov@hotmail.com',
+        pass: '100%Pravda'
+    }
+});
 
-app.post('/api/customers', validate(validation.customer), function (req, res) {
-        connection.query('INSERT INTO cashback_data SET ?', req.body.data, function (err, result) {
+app.post('/api/customers', function (req, res) {
+
+
+// create reusable transporter object using SMTP transport
+        var customerData = req.body.data;
+
+        connection.query('INSERT INTO cashback_data SET ?', customerData, function (err, result) {
             if (!err) {
-                var string = req.body.data.upload_file;
+                var string = customerData.upload_file;
 
                 var regex = /^data:.+\/(.+);base64,(.*)$/;
 
                 var matches = string.match(regex);
                 var ext = matches[1];
-                var data = matches[2];
-                var buffer = new Buffer(data, 'base64');
-k
-                fs.writeFile("file.pdf", buffer, function(err) {
-                    console.log(err);
+                var rawBase64Data = matches[2];
+                var buffer = new Buffer(rawBase64Data, 'base64');
+
+                var fileDir = './tmp';
+                var randomFileName = randomstring.generate() + '.pdf';
+                var fullFileName = fileDir + '/' + randomFileName;
+
+                fs.writeFile(fullFileName, buffer, function(err) {
+                    if(err) {
+                        console.log(err);
+                    }
                 });
 
-                res.status(200).send(result);
+                var locals = {
+                    customerData : customerData
+                };
+
+                sendEmail('response_customer', locals, function (err, responseStatus, html, text) {
+                    console.log(responseStatus);
+                    if(err){
+                        console.log(err);
+                        res.send(err);
+                    };
+                    res.send(responseStatus);
+                });
+
+                //TODO Add second email to vw
+
             }
             else {
                 console.log(err);
@@ -50,6 +90,44 @@ k
         });
     }
 );
+
+function sendEmail (templateName, locals, fn) {
+
+    emailTemplates(templatesDir, function (err, template) {
+        if (err) {
+            //console.log(err);
+            return fn(err);
+        }
+        // Send a single email
+        template(templateName, locals, function (err, html, text) {
+            if (err) {
+                //console.log(err);
+                return fn(err);
+            }
+
+            transport.sendMail({
+                from: 'Dmitry Prudnikov <dmitry.prudnikov@hotmail.com>',
+                to: 'dmitry.prudnikov@amag.ch',
+                subject: 'Empfangsbestätigung Cashback-Antrag',
+                html: html,
+                generateTextFromHTML: true,
+                text: text,
+                attachments: [{
+                    filename: 'cashback.jpg',
+                    path: 'image/cashback.jpg',
+                    cid: 'unique@cashback.pic'
+                }]
+            }, function (err, responseStatus) {
+                if (err) {
+                    return fn(err);
+                }
+                return fn(null, responseStatus, html, text);
+            });
+        });
+    });
+}
+
+
 
 app.get('/api/customers', function (req, res) {
     console.log(req.body);
@@ -67,6 +145,7 @@ app.get('/api/customers', function (req, res) {
 });
 
 app.use(function(err, req, res, next){
+    console.log('ERROR');
     console.log(req.body.data);
     res.status(400).json(err);
 });
@@ -77,20 +156,32 @@ var server = app.listen(app.get('port'), function () {
     debug('Express server listening on port ' + app.get('port'));
     log.info('Express server listening on port ' + app.get('port'));
 });
-
-
-
 /*
- app.get('/api/customers/file', function (req, res) {
+ var transporter = nodemailer.createTransport({
+ service: 'hotmail',
+ auth: {
+ user: 'dmitry.prudnikov@hotmail.com',
+ pass: '100%Pravda'
+ }
+ });
 
- connection.query('SELECT upload_file from cashback_data order by upload_file limit 1', function (err, row, fields) {
- if (!err) {
- res.download('/PDFTEST.pdf');
+ var emailTemplate = '';
+
+ var mailOptions = {
+ from: 'Dmitry Prudnikov <dmitry.prudnikov@hotmail.com>',
+ to: 'dmitry.prudnikov@amag.ch',
+ subject: 'Hello ✔',
+ text: 'Hello world ✔',
+ html: emailTemplate
+ };
+
+ transporter.sendMail(mailOptions, function(error, info){
+ if(error){
+ res.status(200).send(result);
+ return console.log(error);
+ }else {
+ console.log(error);
+ res.send(error);
  }
- else {
- console.log(err);
- res.send(err);
- }
- });
- });
- */
+ console.log('Message sent: ' + info.response);
+ });*/
