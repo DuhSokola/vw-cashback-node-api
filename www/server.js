@@ -61,27 +61,42 @@ app.post('/api/customers', function (req, res) {
                 var randomFileName = randomstring.generate() + '.pdf';
                 var fullFileName = fileDir + '/' + randomFileName;
 
-                fs.writeFile(fullFileName, buffer, function(err) {
-                    if(err) {
+                fs.writeFile(fullFileName, buffer, function (err) {
+                    if (err) {
                         console.log(err);
                     }
                 });
 
-                var locals = {
-                    customerData : customerData
+                var customerLocals = {
+                    customerData: customerData,
+                    recipient: customerData.email
                 };
 
-                sendEmail('response_customer', locals, function (err, responseStatus, html, text) {
+                sendEmail('response_customer', customerLocals, function (err, responseStatus, html, text) {
                     console.log(responseStatus);
-                    if(err){
+                    if (err) {
                         console.log(err);
-                        res.send(err);
-                    };
-                    res.send(responseStatus);
+                    }
                 });
 
-                //TODO Add second email to vw
+                var vwLocals = {
+                    customerData: customerData,
+                    recipient: 'dmitry.prudnikov@amag.ch',
+                    attachment: fullFileName
+                };
 
+                sendEmail('response_customer', vwLocals, function (err, responseStatus, html, text) {
+                    console.log(responseStatus);
+                    if (err) {
+                        console.log(err);
+                    }
+                    fs.unlink(fullFileName, function (err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        res.send('OKAY');
+                    });
+                });
             }
             else {
                 console.log(err);
@@ -91,7 +106,7 @@ app.post('/api/customers', function (req, res) {
     }
 );
 
-function sendEmail (templateName, locals, fn) {
+function sendEmail(templateName, locals, fn) {
 
     emailTemplates(templatesDir, function (err, template) {
         if (err) {
@@ -105,18 +120,28 @@ function sendEmail (templateName, locals, fn) {
                 return fn(err);
             }
 
+            var attachments = [];
+            attachments.push({
+                filename: 'cashback.jpg',
+                path: 'image/cashback.jpg',
+                cid: 'unique@cashback.pic'
+            });
+
+            if(locals.attachment){
+                attachments.push({
+                    filename: locals.attachment.split('.')[0],
+                    path: locals.attachment
+                });
+            }
+
             transport.sendMail({
                 from: 'Dmitry Prudnikov <dmitry.prudnikov@hotmail.com>',
-                to: 'dmitry.prudnikov@amag.ch',
+                to: locals.recipient,
                 subject: 'Empfangsbestätigung Cashback-Antrag',
                 html: html,
                 generateTextFromHTML: true,
                 text: text,
-                attachments: [{
-                    filename: 'cashback.jpg',
-                    path: 'image/cashback.jpg',
-                    cid: 'unique@cashback.pic'
-                }]
+                attachments: attachments
             }, function (err, responseStatus) {
                 if (err) {
                     return fn(err);
@@ -126,7 +151,6 @@ function sendEmail (templateName, locals, fn) {
         });
     });
 }
-
 
 
 app.get('/api/customers', function (req, res) {
@@ -144,7 +168,7 @@ app.get('/api/customers', function (req, res) {
     });
 });
 
-app.use(function(err, req, res, next){
+app.use(function (err, req, res, next) {
     console.log('ERROR');
     console.log(req.body.data);
     res.status(400).json(err);
